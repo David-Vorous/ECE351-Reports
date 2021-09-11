@@ -1,0 +1,212 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%		David Vorous
+%		ECE-351-51
+%		Lab #2
+%		Due: Sep. 14, 2021
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[12pt]{report}
+\usepackage[english]{babel}
+%\usepackage{natbib}
+\usepackage{url}
+\usepackage[utf8x]{inputenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\graphicspath{ {./Graphics/} }
+\usepackage{parskip}
+\usepackage{fancyhdr}
+\usepackage{vmargin}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{xcolor}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codeblue}{rgb}{0,0,0.95}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{codeblue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codegreen},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+ 
+\lstset{style=mystyle}
+
+\setmarginsrb{3 cm}{2.5 cm}{3 cm}{2.5 cm}{1 cm}{1.5 cm}{1 cm}{1.5 cm}
+
+\title{LAB 2}								
+\author{ David Vorous}						
+\date{9/7/21}
+
+\makeatletter
+\let\thetitle\@title
+\let\theauthor\@author
+\let\thedate\@date
+\makeatother
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\theauthor}
+\lhead{\thetitle}
+\cfoot{\thepage}
+
+\begin{document}
+
+\begin{titlepage}
+	\centering
+    \vspace*{0.5 cm}
+\begin{center}    \textsc{\Large   ECE 351 - Section 51 }\\[2.0 cm]	\end{center}
+	\textsc{\Large User-Defined Functions  }\\[0.5 cm]
+	\rule{\linewidth}{0.2 mm} \\[0.4 cm]
+	{ \huge \bfseries \thetitle}\\
+	\rule{\linewidth}{0.2 mm} \\[1.5 cm]
+	
+	\begin{minipage}{0.4\textwidth}
+		\begin{flushleft} \large
+			\end{flushleft}
+			\end{minipage}~
+			\begin{minipage}{0.4\textwidth}
+            
+			\begin{flushright} \large
+			\emph{Submitted By :} \\
+			David Vorous  
+		\end{flushright}
+           
+	\end{minipage}\\[2 cm]
+
+\end{titlepage}
+
+
+\tableofcontents
+
+\pagebreak
+
+\renewcommand{\thesection}{\arabic{section}}
+
+\section{Introduction}
+ 
+Lab 2 is meant to familiarize the students with function generation and plotting in Python, or more specifically, the Spyder package included with Anaconda. We were given multiple tasks, ranging from plotting a library-included wave-function, to writing definitions for functions discussed in the ECE-350 Lecture. The libraries used in the lab were numpy (imported as "np"), and matplotlib (imported as "plt"). NumPy is a generalized library meant to expand upon Python's original functionality, primarily aimed at scientific purposes. MatPlotLib is a visual package which generates professional plots using a variety of inputs.
+
+
+\section{Equations}
+
+The first equation used in the Lab was the cosine function, used primarily to ease the student into how to use MatPlotLib:
+\begin{equation}
+    y(t) =  \textrm{cos}(t)
+\end{equation}
+Afterwards, we had to define through code the remaining functions, namely:
+\begin{equation}
+    u(t) = 
+    \begin{cases}
+        0 & \text{if $t<0$} \\
+        1/2 & \text{if $t=0$} \\
+        1 & \text{if $t>0$}
+    \end{cases}
+\end{equation}
+\begin{equation}
+    r(t) = 
+    \begin{cases}
+        0 & \text{if $t\leq0$} \\
+        t & \text{if $t>0$}
+    \end{cases}
+\end{equation}
+\begin{center}
+Where $u(t)$ is the Step Function and $r(t)$ is the Ramp Function.
+\end{center} \pagebreak
+
+
+\section{Methodology}
+
+func1 (cosine), func2 (step), and func3 (ramp) utilized incremental sampling to produce new output arrays. func2 and func3 utilized the equations from Section 2 for their definitions, func4 simply combined func2 and func3 to produce a piecewise function, and func5 returned the derivative of the input array with respect to that array's axis:
+\begin{lstlisting}[language=Python]
+def func1(t): 
+    y = np.zeros(t.shape)
+    for i in range(len(t)):
+        y[i] = np.cos(t[i])
+    return y
+
+def func2(t):
+    y = np.zeros(t.shape)
+    for i in range(len(t)):
+        if t[i] >= 0:
+            y[i] = 1
+        else:
+            y[i] = 0
+    return y
+
+def func3(t):
+    y = np.zeros(t.shape)
+    for i in range(len(t)):
+        if t[i] >= 0:
+            y[i] = t[i]
+        else:
+            y[i] = 0
+    return y
+
+def func4(t):
+    y = func3(t) - func3(t-3) + 5*func2(t-3) - 2*func2(t-6) - 2*func3(t-6)
+    return y
+
+def func5(f, t):
+    y = np.diff(f) / np.diff(t)
+    return y
+\end{lstlisting}
+\pagebreak
+
+
+\section{Plots}
+\begin{center}
+    \includegraphics[scale=0.333]{Figure 2021-09-11 122918 (0)}
+    \includegraphics[scale=0.333]{Figure 2021-09-11 122918 (1)}
+    \includegraphics[scale=0.333]{Figure 2021-09-11 122918 (2)}
+    \includegraphics[scale=0.333]{Figure 2021-09-11 122918 (3)}
+    \includegraphics[scale=0.333]{Figure 2021-09-11 122918 (4)}
+    \includegraphics[scale=0.333]{Figure 2021-09-11 122918 (5)}
+    \includegraphics[scale=0.333]{Figure 2021-09-11 122918 (6)}
+    \includegraphics[scale=0.333]{Figure 2021-09-11 122918 (7)}
+    \includegraphics[scale=0.333]{Figure 2021-09-11 122918 (8)}
+\end{center}
+\begin{center}
+    \includegraphics[scale=0.333]{Hand_Drawn}
+    \includegraphics[scale=0.333]{Figure 2021-09-11 122918 (9)}
+\end{center}
+
+
+\section{Results}
+
+The results of the Lab were, eventually, what I had expected. Frankly, we haven't yet reached a point of complexity that would warrant surprise. The cosine function, step function, ramp function, and piecewise function all lined up exactly how one would expect (allowing for sampling errors).
+
+\section{Questions}
+
+\begin{enumerate}
+    \item \textit{Are the plots from Part 3 Task 4 and Part 3 Task 5 identical? Is it possible for them to match? Explain why or why not.} \\ \\ The plots are identical except for the vertical spike at $t=3$ seconds. This is because the derivative yielded by func5 isn't mathematically perfect; it's limited by the sampling size used in the input arrays.
+    \item \textit{How does the correlation between the two plots (from Part 3 Task 4 and Part 3 Task 5) change if you were to change the step size within the time variable in Task 5? Explain why this happens.} \\ \\ Reducing the step size increases the width of the the spike, but increasing does not eliminate it. There is a desync of data from the numerator and denominator in func5 (found in code definition for func5 in Section 2). Here is the resulting plot if the sample size is only 0.1: \\
+    \begin{center}
+        \includegraphics[scale=0.333]{Low_Sample}
+    \end{center}
+    \item \textit{Leave any feedback on the clarity of lab tasks, expectations, and deliverables.} \\ \\ The Lab requests were fairly straight-forward. Most of the difficulty stemmed from my own rusty Python skills.
+\end{enumerate}
+\pagebreak
+
+
+\section{Conclusion}
+
+This Lab required a substantial amount of learning on my part. I already had some background with Python, but that was quite some time ago. And so, as a reintroduction to Python, a formal introduction to NumPy, MatPlotLib, and \LaTeX, this Lab definitely did it's job. I have come to appreciate the used softwares, even if I have to have an Internet tab open at all times for formatting and coding questions.
+
+\end{document}
