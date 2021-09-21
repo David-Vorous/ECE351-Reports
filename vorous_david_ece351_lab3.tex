@@ -1,0 +1,187 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%		David Vorous
+%		ECE-351-51
+%		Lab #3
+%		Due: Sep. 21, 2021
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[12pt]{report}
+\usepackage[english]{babel}
+%\usepackage{natbib}
+\usepackage{url}
+\usepackage[utf8x]{inputenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\graphicspath{ {./Graphics/} }
+\usepackage{parskip}
+\usepackage{fancyhdr}
+\usepackage{vmargin}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{xcolor}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codeblue}{rgb}{0,0,0.95}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{codeblue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codegreen},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+ 
+\lstset{style=mystyle}
+
+\setmarginsrb{3 cm}{2.5 cm}{3 cm}{2.5 cm}{1 cm}{1.5 cm}{1 cm}{1.5 cm}
+
+\title{LAB 3}								
+\author{ David Vorous}						
+\date{9/21/21}
+
+\makeatletter
+\let\thetitle\@title
+\let\theauthor\@author
+\let\thedate\@date
+\makeatother
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\theauthor}
+\lhead{\thetitle}
+\cfoot{\thepage}
+
+\begin{document}
+
+\begin{titlepage}
+	\centering
+    \vspace*{0.5 cm}
+\begin{center}    \textsc{\Large   ECE 351 - Section 51 }\\[2.0 cm]	\end{center}
+	\textsc{\Large Discrete Convolution  }\\[0.5 cm]
+	\rule{\linewidth}{0.2 mm} \\[0.4 cm]
+	{ \huge \bfseries \thetitle}\\
+	\rule{\linewidth}{0.2 mm} \\[1.5 cm]
+	
+	\begin{minipage}{0.4\textwidth}
+		\begin{flushleft} \large
+			\end{flushleft}
+			\end{minipage}~
+			\begin{minipage}{0.4\textwidth}
+            
+			\begin{flushright} \large
+			\emph{Submitted By :} \\
+			David Vorous  
+		\end{flushright}
+           
+	\end{minipage}\\[2 cm]
+
+\end{titlepage}
+
+
+\tableofcontents
+
+\pagebreak
+
+\renewcommand{\thesection}{\arabic{section}}
+
+\section{Introduction}
+
+Lab 3 is meant to familiarize the students with convolutions in Python. After creating a handful of simple input functions, the students were meant to brainstorm the steps of creating a custom convolution function. Immediately after their idea was shared, the students were provided a corrected algorithm, along with an automated library command. The simple functions, and their convolutions (both types) were plotted. The libraries used in the lab were numpy (imported as "np"), matplotlib (imported as "plt"), and scipy.signals (imported as "sig").
+
+\section{Equations}
+
+The first equations used in the Lab were simple:
+\begin{equation}
+    \text{f1}(t) = u(t - 2) - u(t - 9)
+\end{equation}
+\begin{equation}
+    \text{f2}(t) = \text{exp}(-t) \cdot u(t - 9)
+\end{equation}
+\begin{equation}
+    \text{f3}(t) = r(t - 2) \cdot (u(t - 2) - u(t - 3)) + r(4 - t) \cdot (u(t - 3) - u(t - 4))
+\end{equation}
+
+Where $u(t)$ is the Step Function and $r(t)$ is the Ramp Function.
+\pagebreak
+
+
+\section{Methodology}
+
+Both the step and ramp functions utilized incremental sampling to produce the necessary output arrays. Each fX (partially excluding f2) was built from these primary building functions. f1 is a rectangle built of two step functions, f2 is a decaying exponential which starts at t = 0, and f3 is a triangle built out of ramp and step functions. After these functions were implemented, the hand-written code (which was provided) was added to the function list:
+\begin{lstlisting}[language=Python]
+def f1(t):
+    return step(t-2) - step(t-9)
+
+def f2(t):
+    return np.exp(-t) * step(t)
+
+def f3(t):
+    return ramp(t-2) * (step(t-2) - step(t-3)) + ramp(4-t) * (step(t-3) - step(t-4))
+
+def conv(f1,f2):
+    Nf1 = len(f1)
+    Nf2 = len(f2)
+    f1Extended = np.append(f1, np.zeros((1, Nf2 -1)))
+    f2Extended = np.append(f2, np.zeros((1, Nf1 -1)))
+    result = np.zeros(f1Extended.shape)
+    for i in range(Nf2 +Nf1 -2):
+        result[i] = 0
+        for j in range(Nf1):
+            if ((i-j+1) > 0):
+                try:
+                    result[i] += f1Extended[j] * f2Extended[i-j+1]
+                except:
+                    print(i,j)
+    return (result * steps)
+\end{lstlisting}
+Afterwards, the matplotlib.pyplot library was used to plot the simple functions, and their convolutions.
+
+
+\section{Plots}
+\begin{center}
+    \includegraphics[scale=0.41]{Figure 2021-09-14 211229 (0)}
+    \includegraphics[scale=0.41]{Figure 2021-09-14 211229 (1)}
+    \includegraphics[scale=0.41]{Figure 2021-09-14 211229 (2)}
+    \includegraphics[scale=0.41]{Figure 2021-09-14 211229 (3)}
+\end{center}
+
+
+\section{Results}
+
+The results of the Lab were about what I had expected. I hadn't hand-plotted the convolutions prior, but their appearance after their coding seemed to make sense. However, the results of the "Hand-Written" convolution defied my expectations. Perhaps this was due to my ignorance towards how said code operates; my assumption is that it works in a more analytic sense, where my idea of convolution is more graphical.
+
+
+\section{Questions}
+
+\begin{enumerate}
+    \item \textit{Did you work alone or with classmates on this lab? If you collaborated to get to the solution, what did that process look like?} \\ \\ If the brainstorming session is in reference, then I worked with classmates. However, much effort came from myself alone, with occasional comments from my classmates; mostly to confirm their understanding of my train-of-thought.
+    \item \textit{What was the most difficult part of this lab for you, and what did your problem-solving process look like?} \\ \\ I'm not sure that I can pin-point any part that could be considered "the hardest part;" it all seemed rather smooth. I suppose one could argue that the brainstorming portion of the lab was difficult, but I actually found it enjoyable. And I have a hard time describing what my problem-solving process looks like; I suppose I like to understand and describe things visually.
+    \item \textit{Did you approach writing the code with analytical or graphical convolution in mind? Why did you choose this approach?} \\ \\ Definitely graphical. I really love the idea of the impulse response scanning the forcing function... the image almost has hints of programmer inspiration in it.
+    \item \textit{Leave any feedback on the clarity of the lab tasks, expectations, and deliverables.} \\ \\ The Lab was clear, concise, and actually quite fun.
+\end{enumerate}
+\pagebreak
+
+
+\section{Conclusion}
+
+This Lab complimented my already growing interest in convolution. While I'm aware that convolution is typically dismissed in favor of Laplace, I still love the idea of the impulse response scanning the domain of the forcing function. The whole premise sounds like one of those silly ideas a mathematician would come up with for fun, only to find that it has interesting applications down the road. Unfortunately, I still don't quite understand how the "hand-written" convolution code works, but this is fine; we're expected to use the scipy.signal library variant from now on. \\
+
+All files can be found on my GitHub Repositories tab:\\
+\url{https://github.com/David-Vorous?tab=repositories}
+
+\end{document}
