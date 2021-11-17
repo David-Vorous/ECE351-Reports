@@ -1,0 +1,247 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%		David Vorous
+%		ECE-351-51
+%		Lab #11
+%		Due: Nov. 16, 2021
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[12pt]{report}
+\usepackage[english]{babel}
+%\usepackage{natbib}
+\usepackage{url}
+\usepackage[utf8x]{inputenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\graphicspath{ {./Graphics/} }
+\usepackage{parskip}
+\usepackage{fancyhdr}
+\usepackage{vmargin}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{steinmetz}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codeblue}{rgb}{0,0,0.95}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{codeblue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codegreen},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+ 
+\lstset{style=mystyle}
+
+\setmarginsrb{3 cm}{2.5 cm}{3 cm}{2.5 cm}{1 cm}{1.5 cm}{1 cm}{1.5 cm}
+
+\title{LAB 11}								
+\author{ David Vorous}						
+\date{11/16/21}
+
+\makeatletter
+\let\thetitle\@title
+\let\theauthor\@author
+\let\thedate\@date
+\makeatother
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\theauthor}
+\lhead{\thetitle}
+\cfoot{\thepage}
+
+\begin{document}
+
+\begin{titlepage}
+	\centering
+    \vspace*{0.5 cm}
+\begin{center}    \textsc{\Large   ECE 351 - Section 51 }\\[2.0 cm]	\end{center}
+	\textsc{\Large Z -Transform Operations }\\[0.5 cm]
+	\rule{\linewidth}{0.2 mm} \\[0.4 cm]
+	{ \huge \bfseries \thetitle}\\
+	\rule{\linewidth}{0.2 mm} \\[1.5 cm]
+	
+	\begin{minipage}{0.4\textwidth}
+		\begin{flushleft} \large
+			\end{flushleft}
+			\end{minipage}~
+			\begin{minipage}{0.4\textwidth}
+            
+			\begin{flushright} \large
+			\emph{Submitted By :} \\
+			David Vorous  
+		\end{flushright}
+           
+	\end{minipage}\\[2 cm]
+
+\end{titlepage}
+
+
+\tableofcontents
+
+\pagebreak
+
+\renewcommand{\thesection}{\arabic{section}}
+
+\section{Introduction}
+Lab 10 introduces the students to $Z$-transforms. $Z$-transforms take discrete, integer-sampled functions into the $z$-domain, where $z$ relates to $s$ (of the Laplace domain) by $z = e^{s}$. Additionally, as $s$ is a complex number in the Laplace domain, so too is $z$ in the $Z$ domain. Since input functions are discrete, they must be comprised of a series of summed delta functions. This discrete trait also makes the use of an integral for the transformation unnecessary, allowing for a simple summation instead. For this Lab, we calculated the $Z$-domain transfer function of a discrete system, compared our values with library values, and plotted our results. The libraries used in the lab were numpy (imported as "np"), matplotlib (imported as "plt"), and scipy.signal (imported as "sig").
+
+\section{Equations}
+Discrete system for Lab 11:
+\begin{equation}
+    y[k] = 2x[k] - 40x[k-1] + 10y[k-1] - 16y[k-2]
+\end{equation}
+where $y[k]$ is the output, $x[k]$ is the output, and the system is initially at rest.\\
+
+Transfer function:
+\begin{equation}
+    \text{H}(z) = \frac{2z(z-20)}{z^{2} - 10z + 16} = \frac{6z}{z-2} + \frac{-4z}{z-8}
+\end{equation}
+
+$k$-domain transfer function:
+\begin{equation}
+    \text{h}[k] = (6 \cdot 2^{k} - 4 \cdot 8^{k}) \cdot u[k]
+\end{equation}
+
+\pagebreak
+
+\section{Methodology}
+Prior to any programming, H($z$) had to be hand-calculated.\\
+First, all terms of $y[k]$ and $x[k]$ were put on their own side of the equal-sign:
+\begin{equation}
+    y[k] - 10y[k-1] + 16y[k-2] = 2x[k] - 40x[k-1]
+\end{equation}
+Then, the system was transformed into the $z$-domain:
+\begin{equation}
+    \text{Y}(z)-\frac{10}{z}\text{Y}(z)+\frac{16}{z^{2}}\text{Y}(z)=2\text{X}(z)-\frac{40}{z}\text{X}(z)
+\end{equation}
+Y($z$) and X($z$) were then factored out, put to one side of the equal-sign to give H($z$), and the equation was simplified:
+\begin{equation}
+    \text{H}(z) = \frac{\text{Y}(z)}{\text{X}(z)} = \frac{2-\frac{40}{z}}{1-\frac{10}{z}+\frac{16}{z^{2}}} = \frac{2z(z-20)}{z^{2}-10z+16}
+\end{equation}
+After H($z$) was found, it needed to be broken up using partial fraction decomposition:
+\begin{equation}
+    \text{H}(z) = \frac{6z}{z-2}+\frac{-4z}{z-8}
+\end{equation}
+With both versions of H($z$) found, it was finally time to start programming. First, the numerator and denominator of H($z$) were entered, as well as the residues and poles found in Equation 7. Then, the decibels conversion function, and the zplane() function which was provided in the Lab handout were entered. Then,\\ scipy.signals.residuez() was used to calculate and compare the residues and poles with those found via hand-calculation. Lastly, the unit-circle plot and H($z$) plots were setup:\\
+
+\begin{lstlisting}[language=Python]
+# --- Basic Variable Setup ---
+Hnum = [2,-40, 0]
+Hden = [1,-10,16]
+r1 = [6, -4]
+p1 = [2,  8]
+
+# --- User - Defined Functions ---
+def dB(x):
+    return 20*np.log10(x)
+
+# --- Provided Functions ---
+def zplane(b, a, zeros, filename):
+    from matplotlib import patches   
+    ax = plt.subplot(1,1,1)    
+    uc = patches.Circle((0,0), radius=1, fill=False, color='black', ls='dashed')
+    ax.add_patch(uc)  
+    if np.max(b) > 1:
+        kn = np.max(b)
+        b = np.array(b)/float(kn)
+    else:
+        kn = 1
+    if np.max(a) > 1:
+        kd = np.max(a)
+        a = np.array(a)/float(kd)
+    else:
+        kd = 1    
+    p = np.roots(a)
+    z = np.roots(b)
+    k = kn/float(kd)   
+    if zeros:
+        t1 = plt.plot(z.real, z.imag, 'o', ms=10, label='Zeros')
+        plt.setp(t1, markersize=10.0, markeredgewidth=1.0)
+    t2 = plt.plot(p.real, p.imag, 'x', ms=10, label='Poles')
+    plt.setp(t2, markersize=12.0, markeredgewidth=3.0)   
+    ax.spines['left'].set_position('center')
+    ax.spines['bottom'].set_position('center')
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)    
+    plt.legend()    
+    if filename is None:
+        plt.show()
+    else:
+        plt.savefig(filename)        
+    return z,p,k
+
+# --- Prints ---
+r2,p2,k2 = sig.residuez(Hnum, Hden)
+print ("hand-calculated residues:", r1,"\nsig.residuez() residues: ", r2, "\n")
+print ("hand-calculated poles:   ", p1,"\nsig.residuez() poles:    ", p2, "\n")
+r3,p3,k3 = zplane(Hnum, Hden, True, None)
+zplane(Hnum, Hden, False, None)
+print ("zplane() roots:          ", r3,"\nzplane() poles:          ", p3, "\n")
+
+# --- Plot Setup ---
+w,h = sig.freqz(Hnum, Hden, worN=512, whole=True, plot=None, fs=2*np.pi, include_nyquist=False)
+magdB = dB(np.abs(h))
+phase = np.angle(h) * 180.0/np.pi
+\end{lstlisting}
+After programming,  $h[k]$ was hand-calculated using the partial fraction expansion of H($z$), and the $Z$-Transform table in the text:
+\begin{equation}
+    h[k] = (6 \cdot 2^{k} - 4 \cdot 8^{k}) \cdot u[k]
+\end{equation}
+
+\section{Plots}
+\begin{center}
+Unit-Circle plot showing poles and zeros:\\
+    \includegraphics[scale=0.46]{Figure 2021-11-16 151728 (0)}\\~\\
+Unit-Circle plot showing only poles:\\
+    \includegraphics[scale=0.46]{Figure 2021-11-16 151728 (1)}\\~\\
+    \includegraphics[scale=0.53]{Figure 2021-11-16 151728 (2)}
+\end{center}
+
+\section{Results}
+The results of Lab 11 were as expected; much of the procedure involved simply checking whether our hand-calculated values matched the library equivalents. The remainder of the Lab required plots which plainly showed the behavior of the transfer function, as well as the behavior of the system as a whole.
+
+\section{Questions}
+\begin{enumerate}
+    \item{Looking at the plot generated from zplane() (Unit-Circle plot), is H(z) stable? Explain why or why not.}\\~\\
+    \textit{According to the text, any pole outside the unit circle will force the resulting system to be unstable. We can see this in the resulting h[$k$] function. Both terms have a value greater than one, raised to the power of $k$. If the bases of these exponents were less than one, you could equivalently say that their multiplicative inverse was raised to a negative $k$ value, which tends to zero as $k$ approaches infinity. In our case however, with both poles sit outside the Unit-Circle, and both terms in h[$k$] being greater than one, the system is unstable.}\\
+\end{enumerate}
+
+\section{Conclusion}
+The Lab provided a decent introduction into $Z$-Transforms and their uses. It has become rather clear that the Laplace Transforms used in previous Labs were calculated discretely, not continuously. Python cannot check each infinitesimally small sample of the input function, nor will it solve the problem symbolically... it must take discrete samples, and generate what is in reality, a dense-sampling $Z$-Transform. The ability to increase sampling density requires adding an additional period term and modifying the transforms table, but it could be done. One aspect that was surprising to me was the magnitude and phase response plots; they did not require log-scaling to see properly. I'm assuming that this is a trait inherent to $Z$-Transforms. Aside from this confusion, all the library functions and plots made sense, and the Lab was enjoyable to complete.
+
+All files can be found on my GitHub Repositories tab:\\
+\url{https://github.com/David-Vorous?tab=repositories}
+\pagebreak
+
+\section{Appendix}
+Program output:
+\begin{lstlisting}[language=Python]
+hand-calculated residues: [6, -4] 
+sig.residuez() residues:  [ 6. -4.] 
+
+hand-calculated poles:    [2, 8] 
+sig.residuez() poles:     [2. 8.] 
+
+zplane() roots:           [20.  0.] 
+zplane() poles:           [8. 2.] 
+\end{lstlisting}
+
+\end{document}
