@@ -1,0 +1,209 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%		David Vorous
+%		ECE-351-51
+%		Lab 12
+%		Due: Dec. 3, 2021
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[12pt]{report}
+\usepackage[english]{babel}
+%\usepackage{natbib}
+\usepackage{url}
+\usepackage[utf8x]{inputenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\graphicspath{ {./Graphics/} }
+\usepackage{parskip}
+\usepackage{fancyhdr}
+\usepackage{vmargin}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{steinmetz}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codeblue}{rgb}{0,0,0.95}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{codeblue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codegreen},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+ 
+\lstset{style=mystyle}
+
+\setmarginsrb{3 cm}{2.5 cm}{3 cm}{2.5 cm}{1 cm}{1.5 cm}{1 cm}{1.5 cm}
+
+\title{LAB 12 - Final Project}								
+\author{ David Vorous}						
+\date{12/03/21}
+
+\makeatletter
+\let\thetitle\@title
+\let\theauthor\@author
+\let\thedate\@date
+\makeatother
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\theauthor}
+\lhead{\thetitle}
+\cfoot{\thepage}
+
+\begin{document}
+
+\begin{titlepage}
+	\centering
+    \vspace*{0.5 cm}
+\begin{center}    \textsc{\Large   ECE 351 - Section 51 }\\[2.0 cm]	\end{center}
+	\textsc{\Large Filter Design }\\[0.5 cm]
+	\rule{\linewidth}{0.2 mm} \\[0.4 cm]
+	{ \huge \bfseries \thetitle}\\
+	\rule{\linewidth}{0.2 mm} \\[1.5 cm]
+	
+	\begin{minipage}{0.4\textwidth}
+		\begin{flushleft} \large
+			\end{flushleft}
+			\end{minipage}~
+			\begin{minipage}{0.4\textwidth}
+            
+			\begin{flushright} \large
+			\emph{Submitted By :} \\
+			David Vorous  
+		\end{flushright}
+           
+	\end{minipage}\\[2 cm]
+
+\end{titlepage}
+
+
+\tableofcontents
+
+\pagebreak
+
+\renewcommand{\thesection}{\arabic{section}}
+
+\section{Introduction}
+Lab 12 is the first Lab where we had to completely design a solution to a problem-statement. The requirement is to remove multiple sources of noise from a position measurement signal. This noise exists above and below the desired frequencies of 1800 Hz to 2000 Hz. The solution is to develop a filter which attenuates the low frequencies by at least 30dB, the high frequencies by at least 21dB, and the desired frequencies by no more than 0.3dB. A filter which attenuates frequencies on both sides of a given range is called a band-pass filter, and can be achieved in a variety of ways. The method I've chosen for this project is a single-pole, RLC filter which measures across the Resistor. The libraries used in the Lab were umpy (imported as "np"), matplotlib (imported as "plt"), scipy.signal (imported as "sig"), scipy.fftpack, control (imported as "con"), and pandas (imported as "pd").
+
+\section{Equations}
+\begin{equation}
+    \text{H}(s) = \frac{\beta s}{s^{2}+\beta s+\omega _{0}^{2}}
+\end{equation}
+where $\beta$ = R/L and $\omega _{0}^{2}$ = 1900$^{2}$ Hz = 1/LC
+\begin{equation}
+    |\text{H}(\omega)| = \frac{|\beta \omega|}{\sqrt{(\beta \omega)^{2} + (-\omega ^{2}+\omega _{0}^{2})^{2}}}
+\end{equation}
+
+Numerical solve for $\beta$ with attenuation at -0.3 dB:
+\begin{equation}
+    \text{-}0.3 = 20\cdot \text{log}_{10} \left( \frac{\beta \cdot 2000}{\sqrt{(\beta \cdot 2000)^{2} + (-2000^{2}+1900^{2})^{2}}} \right)
+\end{equation}
+
+\pagebreak
+
+\section{Methodology}
+Prior to any programming, the equations for $|$H($\omega$)$|$ had to be derived, and the Bandwidth ($\beta$) and center frequency ($\omega_{0}$) had to be calculated. $|$H($\omega$)$|$ was found and listed as Equation 2, the numerical solution to Equation 3 yielded a $\beta$ of about 729.16 Hz, and $\omega_{0}$ was found as the average of the upper and lower bounds of the desired frequency, yielding 1900 Hz. The input signal was read into the program via the pd.read\_csv() function from the "pandas" library, the transfer function for the filter was defined in terms of R, L, and C, and the FFT() function was defined:\\
+
+\begin{lstlisting}[language=Python]
+# --- Basic Variables/Arrays ---
+fs = 1e6
+
+df = pd.read_csv('NoisySignal.csv')
+t = df['0'].values
+sensor_sig = df['1'].values
+
+B = 729 * 2 * np.pi
+w0 = 1900 * 2 * np.pi
+R = 20.0
+L = R/B
+C = B/(w0**2 * R)
+
+Hnum = [0, R/L, 0]
+Hden = [1, R/L, 1/(L*C)]
+
+# --- User-Defined Functions ---
+def FFT(x,fs):
+    N = len(x)                        # find the length of the signal
+    X_fft = scipy.fftpack.fft(x)      # perform the fast Fourier transform (fft)
+    X_fft_shifted = scipy.fftpack.fftshift( X_fft ) # shift zero frequency components
+                                                    # to the center of the spectrum             
+    freq = np.arange(-N/2, N/2)*fs/N  # compute the frequencies for the output
+                                      # signal , (fs is the sampling frequency and
+                                      # needs to be defined previously in your code
+    X_mag = np.abs( X_fft_shifted )/N # compute the magnitudes of the signal
+    X_phi = np.angle( X_fft_shifted ) # compute the phases of the signal
+    for i in range(len(X_phi)):
+        if (X_mag[i] < 1e-10):
+            X_phi[i] = 0
+    return freq, X_mag, X_phi
+
+def Hmag(w):
+    return np.abs(B*w)/np.sqrt((B*w)**2 + (-w**2 + w0**2)**2)
+
+# --- Calculations ---
+freq, inMAG, inPHI = FFT(sensor_sig, fs)
+
+znum, zden = sig.bilinear(Hnum, Hden, fs)
+filt = sig.lfilter(znum, zden, sensor_sig)
+
+_, outMAG, outPHI = FFT(filt, fs)
+
+\end{lstlisting}
+
+\section{Plots}
+\begin{center}
+    \includegraphics[scale=0.4]{Figure 2021-12-07 131538 (0)}
+    \includegraphics[scale=0.4]{Figure 2021-12-07 131538 (1)}\\
+\pagebreak
+Filter Bode Plots:\\~\\
+    \includegraphics[scale=0.4]{Figure 2021-12-07 131538 (2)}\\~\\
+    \includegraphics[scale=0.4]{Figure 2021-12-07 131538 (5)}\\~\\
+    \includegraphics[scale=0.3]{Figure 2021-12-07 131538 (3)}
+    \includegraphics[scale=0.3]{Figure 2021-12-07 131538 (4)}\\
+\pagebreak
+Input \& Output FFT with $|$H($f$)$|$:\\~\\
+    \includegraphics[scale=0.4]{Figure 2021-12-07 131538 (6)}\\~\\
+    \includegraphics[scale=0.4]{Figure 2021-12-07 131538 (9)}\\~\\
+    \includegraphics[scale=0.3]{Figure 2021-12-07 131538 (7)}
+    \includegraphics[scale=0.3]{Figure 2021-12-07 131538 (8)}\\
+\end{center}
+
+\section{Results}
+The filtered output shows that the unwanted frequencies have been attenuated by the amounts specified in the problem-statement. The frequencies in the range between 1800 Hz and 2000 Hz have been attenuated by no more than 0.3dB, and the remaining frequencies have been attenuated by atleast 30dB. The final RLC filter has a free-variable R, with an L and C in terms of R:
+\begin{equation}
+    \text{L} = \frac{R}{729}
+\end{equation}
+\begin{equation}
+    \text{C} = \frac{729}{1900^{2}\cdot R}
+\end{equation}
+
+\section{Questions}
+Earlier this semester, you were asked what you personally wanted to get out of taking this course. Do you feel like that personal goal was met? Why or why not?\\~\\
+\textit{At the beginning of the semester, my answer to this questions was, "I love using software to perform mathematical calculations. So I'm looking forward to this;" I think it's safe to say that I got my wish. We performed many calculations throughout this course, both by hand and by computer; all of which were interesting and somewhat challenging. The gratification of seeing that effort translated to plots and values is what I loved about this course.}
+
+\section{Conclusion}
+Lab 12 provided a simple yet strict challenge. We had to produce a custom filter which adhered to specific requirements, both in terms of attenuation, and frequency range. The process of designing the filter went through many stages, most of which were guided by mistakes, and some of which by preference. The mistakes included forgetting to convert between Hz and rad/s, and the assumption that bandwidth simply equals the distance from the desired lower and upper frequency bounds. I believe my final solution satisfies the problem requirements, and will be relatively cheap to produce and install. This Lab, and indeed the course as a whole, was enjoyable to complete, and I experienced little to no problem-clarity issues.\\
+
+All files concerning this course can be found on my GitHub Repositories tab:\\
+\url{https://github.com/David-Vorous?tab=repositories}
+\pagebreak
+
+\end{document}
